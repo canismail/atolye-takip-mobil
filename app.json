@@ -1,0 +1,61 @@
+{
+  "expo": {
+    "name": "Atölye Yönetim",
+    "slug": "atolye-yonetim",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "atolye",
+    "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.cmsteknik.atolye",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Ürün ve malzeme fotoğrafı seçmek için.",
+        "NSCameraUsageDescription": "Ürün ve malzeme fotoğrafı çekmek için."
+      }
+    },
+    "android": {
+      "package": "com.cmsteknik.atolye",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Ürün ve malzeme fotoğrafı seçmek için.",
+          "cameraPermission": "Ürün ve malzeme fotoğrafı çekmek için."
+        }
+      ],
+      "expo-image",
+      "expo-sharing",
+      "expo-status-bar",
+      "expo-font",
+      "expo-splash-screen",
+      "@react-native-community/datetimepicker"
+    ],
+    "experiments": {
+      "typedRoutes": false
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4282da70-5be8-43fd-a8c0-0e40df66e234"
+      }
+    },
+    "owner": "cannmerall"
+  }
+}

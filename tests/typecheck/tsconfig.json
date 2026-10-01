@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "target": "ES2022", "lib": ["ES2022"], "module": "ESNext", "moduleResolution": "bundler",
+    "strict": true, "esModuleInterop": true, "jsx": "preserve", "skipLibCheck": true, "noEmit": true,
+    "noUnusedLocals": true, "noUnusedParameters": false
+  },
+  "include": ["./stubs.d.ts", "../../src/**/*.ts", "../../src/**/*.tsx", "../../app/**/*.tsx"]
+}
