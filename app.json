@@ -27,6 +27,7 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
+        "android.permission.RECORD_AUDIO",
         "android.permission.RECORD_AUDIO"
       ]
     },
@@ -45,7 +46,8 @@
       "expo-status-bar",
       "expo-font",
       "expo-splash-screen",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": false
@@ -54,8 +56,15 @@
       "router": {},
       "eas": {
         "projectId": "4282da70-5be8-43fd-a8c0-0e40df66e234"
-      }
+      },
+      "serverUrl": "https://atolye-sunucu-production.up.railway.app"
     },
-    "owner": "cannmerall"
+    "owner": "cannmerall",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/4282da70-5be8-43fd-a8c0-0e40df66e234"
+    }
   }
 }

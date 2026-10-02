@@ -1,0 +1,12 @@
+node_modules
+.expo
+app
+assets
+tests
+tools
+dist
+data
+*.log
+.git
+*.bak
+_to_delete

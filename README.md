@@ -81,3 +81,14 @@ ekranlar SQL bilmez. Sunucuya geçerken:
 4. Çevrimdışı çalışma gerekirse yerel SQLite önbellek + senkron kuyruğu eklenir; fotoğraflar için nesne depolama
    (S3 benzeri) ve veritabanında dosya adı yerine URL tutulur.
 5. Kullanıcı girişi (token) ve çoklu kullanıcı için `settings`'e ek olarak `users` tablosu gerekir.
+
+## Merkezi sunucu (Railway)
+
+Uygulama artık verileri telefonda değil sunucuda tutar; aynı hesapla giriş yapan her cihaz aynı veriyi görür.
+
+- **Kurulum:** `bash hepsi.sh` (Railway girişi + kullanıcı adı/şifre belirleme + yükleme + veri aktarımı + uygulamayı yayınlama).
+- **Sunucu:** `server/index.ts` (Node 22, `node:sqlite`). Telefondaki mantığın aynısı `src/repo` altında çalışır; telefon `src/repo/api.ts` ile `/rpc` üzerinden çağırır.
+- **Veri:** Railway volume → `/data` (veritabanı, `images/`, günlük `backups/` — son 14 gün).
+- **Güvenlik:** HTTPS (Railway), kullanıcı adı + şifre, imzalı oturum jetonu, yanlış girişte bekletme / IP başına kilit, yalnızca izinli repo metotları.
+- **Sonradan veri aktarmak:** `python3 tools/tasi.py --url https://... ` (masaüstü `erp.db` + fotoğraflar).
+- **Sunucu testi (yerel):** `APP_USERNAME=x APP_PASSWORD=sifre1234 TOKEN_SECRET=<24+ karakter> node --experimental-strip-types --experimental-sqlite --no-warnings --import ./server/register.mjs server/index.ts`

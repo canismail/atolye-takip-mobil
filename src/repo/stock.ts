@@ -12,7 +12,8 @@ export interface MaterialInput {
   min_qty: number;
   /** Hammadde dışında girilen birim maliyet (hammaddede hesaplanır). */
   unit_cost: number;
-  shape?: 'rect' | 'round' | null;
+  /** rect: dim_a=en, dim_b=boy · round: dim_a=çap · pipe: dim_a=dış çap, dim_b=et kalınlığı */
+  shape?: 'rect' | 'round' | 'pipe' | null;
   dim_a?: number;
   dim_b?: number;
   length_mm?: number;
@@ -54,6 +55,10 @@ export function makeStockRepo(db: Db, settings: SettingsRepo, products: { withSt
     let grade: string | null = null, density: number | null = null, weight = 0, kg: number | null = null;
     if (isHam) {
       shape = input.shape ?? 'rect';
+      if (shape === 'pipe') {
+        const d = input.dim_a ?? 0, t = input.dim_b ?? 0;
+        if (d > 0 && (t <= 0 || 2 * t > d)) throw new Error("Boru için et kalınlığı 0'dan büyük ve dış çapın yarısından küçük/eşit olmalıdır.");
+      }
       a = input.dim_a ?? 0;
       b = shape === 'round' ? 0 : input.dim_b ?? 0;
       len = input.length_mm ?? 0;

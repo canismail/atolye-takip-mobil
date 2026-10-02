@@ -25,4 +25,22 @@ export async function initDb(db: Db): Promise<void> {
   for (const [k, v] of Object.entries(DEFAULT_SETTINGS)) {
     await db.run('INSERT OR IGNORE INTO settings(key, value) VALUES (?, ?)', [k, v]);
   }
+  await seedMaterialType(db, '1050 (Çelik)', 7.85, 'seed_mt_1050');
+}
+
+/** Var olan veritabanlarına yeni bir malzeme cinsini bir kez ekler (kullanıcı sonradan silerse geri gelmez). */
+async function seedMaterialType(db: Db, name: string, density: number, flag: string): Promise<void> {
+  if (await db.get('SELECT 1 FROM settings WHERE key=?', [flag])) return;
+  const row = await db.get<{ value: string | null }>("SELECT value FROM settings WHERE key='material_types'");
+  let rows: { name?: string; density?: number }[] = [];
+  try { rows = row?.value ? JSON.parse(row.value) : []; } catch { rows = []; }
+  const prefix = name.split(' ')[0];
+  if (!rows.some((r) => String(r.name ?? '').startsWith(prefix))) {
+    let idx = rows.findIndex((r) => String(r.name ?? '').startsWith('1040'));
+    if (idx < 0) idx = rows.length - 1;
+    rows.splice(idx + 1, 0, { name, density });
+    await db.run("INSERT INTO settings(key, value) VALUES ('material_types', ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+      [JSON.stringify(rows)]);
+  }
+  await db.run("INSERT INTO settings(key, value) VALUES (?, '1')", [flag]);
 }

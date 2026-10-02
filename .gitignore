@@ -4,3 +4,8 @@ dist/
 *.db
 *.log
 .DS_Store
+_to_delete/
+*.bak
+.env
+.env.*
+sunucu-adresi.txt

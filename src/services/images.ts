@@ -1,48 +1,39 @@
-import { Directory, File, Paths } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { Alert } from 'react-native';
+import { getSession } from './session';
 
-/** Fotoğraflar cihazda `images/` klasöründe tutulur; veritabanında yalnızca dosya adı saklanır
- *  (masaüstü sürümüyle aynı). Yedek dosyasına fotoğraflar dahil değildir. */
-function dir(): Directory {
-  const d = new Directory(Paths.document, 'images');
-  if (!d.exists) d.create({ intermediates: true, idempotent: true });
-  return d;
-}
-
+/** Fotoğraflar sunucuda saklanır; veritabanında yalnızca dosya adı tutulur. */
 export function imageUri(name: string | null | undefined): string | null {
-  if (!name) return null;
-  try {
-    const f = new File(dir(), name);
-    return f.exists ? f.uri : null;
-  } catch {
-    return null;
-  }
+  const s = getSession();
+  if (!name || !s) return null;
+  return `${s.url}/images/${encodeURIComponent(name)}?t=${encodeURIComponent(s.token)}`;
 }
 
-export function deleteImage(name: string | null | undefined): void {
-  if (!name) return;
+export async function deleteImage(name: string | null | undefined): Promise<void> {
+  const s = getSession();
+  if (!name || !s) return;
   try {
-    const f = new File(dir(), name);
-    if (f.exists) f.delete();
-  } catch {
-    /* dosya zaten yok */
-  }
+    await fetch(`${s.url}/images/${encodeURIComponent(name)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${s.token}` } });
+  } catch { /* sunucuda kalan dosya zararsız */ }
 }
 
-export function clearAllImages(): void {
-  try {
-    const d = dir();
-    for (const item of d.list()) if (item instanceof File) item.delete();
-  } catch {
-    /* yoksay */
-  }
-}
+/** Sunucu tüm veriyi sıfırlarken fotoğrafları da siler. */
+export function clearAllImages(): void {}
 
-/** Seçilen görseli uygulama klasörüne kopyalar ve dosya adını döndürür. */
-export function storePickedImage(srcUri: string, prefix: string): string {
+export async function storePickedImage(srcUri: string, prefix: string): Promise<string> {
+  const s = getSession();
+  if (!s) throw new Error('Oturum yok.');
   const name = `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}.jpg`;
-  new File(srcUri).copy(new File(dir(), name));
+  const blob = await (await fetch(srcUri)).blob();
+  let res: Response;
+  try {
+    res = await fetch(`${s.url}/images/${name}`, {
+      method: 'PUT', headers: { Authorization: `Bearer ${s.token}`, 'Content-Type': 'image/jpeg' }, body: blob,
+    });
+  } catch {
+    throw new Error('Fotoğraf yüklenemedi: sunucuya ulaşılamadı.');
+  }
+  if (!res.ok) throw new Error(`Fotoğraf yüklenemedi (${res.status}).`);
   return name;
 }
 
@@ -53,10 +44,10 @@ export interface PhotoState {
 }
 export const emptyPhoto: PhotoState = { uri: null, removed: false };
 
-/** Kaydetme anında: yeni dosyayı kopyalar; eski dosyanın adını `oldToDelete` ile döndürür (kayıt başarılı olduktan sonra silin). */
-export function resolvePhoto(current: string | null | undefined, st: PhotoState, prefix: string):
-  { image: string | null; oldToDelete: string | null } {
-  if (st.uri) return { image: storePickedImage(st.uri, prefix), oldToDelete: current ?? null };
+/** Kaydetme anında: yeni dosyayı sunucuya yükler; eski dosyanın adını `oldToDelete` ile döndürür (kayıt başarılı olduktan sonra silin). */
+export async function resolvePhoto(current: string | null | undefined, st: PhotoState, prefix: string):
+  Promise<{ image: string | null; oldToDelete: string | null }> {
+  if (st.uri) return { image: await storePickedImage(st.uri, prefix), oldToDelete: current ?? null };
   if (st.removed) return { image: null, oldToDelete: current ?? null };
   return { image: current ?? null, oldToDelete: null };
 }

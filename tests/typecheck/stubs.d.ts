@@ -47,3 +47,5 @@ declare module 'expo-router' {
   export function useLocalSearchParams<T>(): T;
   export function useFocusEffect(cb: () => void | (() => void)): void;
 }
+declare module 'expo-secure-store';
+declare module 'expo-constants' { const x: any; export default x; }

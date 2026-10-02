@@ -110,6 +110,7 @@ export const SCHEMA: string[] = [
 
 export const DEFAULT_MATERIAL_TYPES = [
   { name: '1040 (Çelik)', density: 7.85 },
+  { name: '1050 (Çelik)', density: 7.85 },
   { name: 'St37 (Çelik)', density: 7.85 },
   { name: 'Paslanmaz 304', density: 7.93 },
   { name: 'Alüminyum', density: 2.7 },

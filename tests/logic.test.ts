@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { openNodeDb } from './nodeAdapter';
+import { openNodeDb } from '../server/sqliteAdapter';
 import { initDb } from '../src/db/migrate';
 import { createRepo } from '../src/repo';
 import { calcUnitWeight, hammaddeUnitCost, stockStatus, sizeLabel } from '../src/domain/weight';
@@ -39,6 +39,13 @@ test('ağırlık: 30x40x50 mm 1040 = 0,471 kg; Ø30x50 yuvarlak', async () => {
   close(calcUnitWeight('rect', 30, 40, 50, 7.85), 0.471);
   close(calcUnitWeight('round', 30, 0, 50, 7.85), (Math.PI / 4 * 900 * 50) / 1e6 * 7.85);
   assert.equal(calcUnitWeight(null, 30, 40, 50, 7.85), 0);
+  // boru: Ø40×3, 1 m, çelik → 2,74 kg (tablo değeri); Ø48,3×3,2 → 3,56 kg/m; et = çap/2 → dolu çubuk
+  close(calcUnitWeight('pipe', 40, 3, 1000, 7.85), 2.7374, 0.001);
+  close(calcUnitWeight('pipe', 48.3, 3.2, 1000, 7.85), 3.5589, 0.001);
+  close(calcUnitWeight('pipe', 20, 10, 100, 7.85), calcUnitWeight('round', 20, 0, 100, 7.85));
+  assert.equal(calcUnitWeight('pipe', 20, 11, 100, 7.85), 0);
+  assert.equal(calcUnitWeight('pipe', 20, 0, 100, 7.85), 0);
+  assert.equal(sizeLabel({ shape: 'pipe', dim_a: 40, dim_b: 3, length_mm: 1000 }), 'Boru Ø40x3 x 1.000 mm');
   close(hammaddeUnitCost('adet', 0.471, 50), 23.55);
   assert.equal(hammaddeUnitCost('kg', 0, 50), 50);
   assert.equal(sizeLabel({ shape: 'rect', dim_a: 30, dim_b: 40, length_mm: 50 }), '30x40 x 50 mm');
@@ -382,6 +389,41 @@ test('yedek: dışa aktar → sıfırla → içe aktar', async () => {
   await r.backup.resetAll();
   const pid2 = await r.products.save({ name: 'Flanş', category: 'Metal Ürün', icon: '📦', unit_price: 1, status: 'Aktif', description: '' });
   assert.equal(pid2, 1);
+});
+
+test('boru kesiti: kayıt, ağırlık, maliyet, yeniden hesap, geçersiz et kalınlığı', async () => {
+  const r = await fresh();
+  const id = await r.stock.saveMaterial({ name: 'Boru 40x3', category: 'Hammadde', unit: 'kg', min_qty: 0, unit_cost: 0,
+    shape: 'pipe', dim_a: 40, dim_b: 3, length_mm: 1000, grade: '1050 (Çelik)', kg_price: 30 });
+  let it = (await r.stock.get(id))!;
+  close(it.unit_weight, 2.7374, 0.001);
+  close(it.unit_cost, 2.7374 * 30, 0.05);
+  assert.equal(it.unit, 'adet');
+  assert.equal(it.size, 'Boru Ø40x3 x 1.000 mm');
+  assert.equal(it.dim_b, 3);
+  await assert.rejects(() => r.stock.saveMaterial({ name: 'Kalın', category: 'Hammadde', unit: 'adet', min_qty: 0, unit_cost: 0,
+    shape: 'pipe', dim_a: 20, dim_b: 11, length_mm: 100, grade: '1050 (Çelik)', kg_price: 1 }), /et kalınlığı/);
+  await assert.rejects(() => r.stock.saveMaterial({ name: 'Kalınsız', category: 'Hammadde', unit: 'adet', min_qty: 0, unit_cost: 0,
+    shape: 'pipe', dim_a: 20, dim_b: 0, length_mm: 100, grade: '1050 (Çelik)', kg_price: 1 }), /et kalınlığı/);
+  await r.settings.setMaterialTypes([{ name: '1050 (Çelik)', density: 8 }]);
+  await r.stock.recalcHammadde();
+  it = (await r.stock.get(id))!;
+  close(it.unit_weight, 2.7374 * 8 / 7.85, 0.001);
+});
+
+test('1050 (Çelik) malzeme cinsi: yeni kurulumda var, eski veritabanına bir kez eklenir, silinirse dönmez', async () => {
+  const db = openNodeDb();
+  await initDb(db);
+  const r = createRepo(db);
+  assert.ok((await r.settings.materialTypes()).some((t) => t.name === '1050 (Çelik)' && t.density === 7.85));
+  // eski veritabanı: 1050'siz liste, bayrak yok
+  await r.settings.setMaterialTypes([{ name: '1040 (Çelik)', density: 7.85 }, { name: 'Alüminyum', density: 2.7 }]);
+  await db.run("DELETE FROM settings WHERE key='seed_mt_1050'");
+  await initDb(db);
+  assert.deepEqual((await r.settings.materialTypes()).map((t) => t.name), ['1040 (Çelik)', '1050 (Çelik)', 'Alüminyum']);
+  await r.settings.setMaterialTypes([{ name: 'Alüminyum', density: 2.7 }]);
+  await initDb(db);
+  assert.deepEqual((await r.settings.materialTypes()).map((t) => t.name), ['Alüminyum']);
 });
 
 for (const [name, fn] of tests) {

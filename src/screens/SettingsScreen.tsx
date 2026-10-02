@@ -19,13 +19,14 @@ export default function SettingsScreen() {
       <TargetsCard S={data.S} />
       <MaterialTypesCard initial={data.types} />
       <BackupCard />
+      <AccountCard />
       <Card style={{ gap: 6 }}>
         <SectionTitle>Hesaplama Mantığı</SectionTitle>
         <Muted>Birim ağırlık (kg) = hacim (cm³) × yoğunluk (g/cm³) ÷ 1000. Dikdörtgen: en × boy × uzunluk; yuvarlak: π/4 × çap² × uzunluk (mm). Birim maliyet = birim ağırlık × kg fiyatı; ölçü yoksa kg fiyatı birim maliyet olur. Yoğunluk değişince tüm hammaddeler yeniden hesaplanır.</Muted>
       </Card>
       <Card style={{ gap: 6 }}>
         <SectionTitle>Hakkında</SectionTitle>
-        <Muted>Atölye Yönetim · mobil sürüm 0.1.0. Veriler şimdilik yalnızca bu cihazdaki yerel veritabanında tutulur; sunucuya geçiş planlıdır.</Muted>
+        <Muted>Atölye Yönetim · mobil sürüm 0.1.0. Veriler merkezi sunucuda tutulur; aynı hesapla giriş yapan tüm cihazlar aynı veriyi görür.</Muted>
       </Card>
     </Screen>
   );
@@ -133,6 +134,17 @@ function MaterialTypesCard({ initial }: { initial: MaterialType[] }) {
   );
 }
 
+function AccountCard() {
+  const { serverUrl, logout } = useApp();
+  return (
+    <Card style={{ gap: 8 }}>
+      <SectionTitle>Hesap</SectionTitle>
+      <Muted>Sunucu: {serverUrl}</Muted>
+      <Button icon="log-out-outline" title="Çıkış yap" onPress={() => confirm('Çıkış yapılsın mı?', 'Bu cihazdaki oturum kapatılır. Veriler sunucuda kalır.', logout, 'Çıkış')} />
+    </Card>
+  );
+}
+
 function BackupCard() {
   const { repo, bump } = useApp();
   const [busy, setBusy] = useState(false);
@@ -143,7 +155,7 @@ function BackupCard() {
   return (
     <Card style={{ gap: 12 }}>
       <SectionTitle>Yedekleme</SectionTitle>
-      <Banner text="Veriler bu telefonda saklanır. Telefon değiştirmeden / uygulamayı silmeden önce yedek alın. Fotoğraflar yedeğe dahil değildir." />
+      <Banner text="Veriler sunucuda saklanır ve her gün otomatik yedeklenir. Buradan ayrıca elle yedek alabilirsiniz (fotoğraflar yedeğe dahil değildir)." />
       <ButtonRow>
         <Button icon="share-outline" title="Yedek al / paylaş" loading={busy} onPress={() => run(async () => shareBackup(await repo.backup.exportAll()))} />
         <Button icon="download-outline" title="Yedekten geri yükle" disabled={busy} onPress={() => run(async () => {

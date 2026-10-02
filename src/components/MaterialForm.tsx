@@ -16,7 +16,8 @@ export function MaterialForm({ item, onClose, onSaved }: { item: StockItem | nul
   const [unit, setUnit] = useState(item?.unit ?? 'adet');
   const [minQty, setMinQty] = useState(numInput(item?.min_qty ?? 0));
   const [cost, setCost] = useState(numInput(item?.unit_cost ?? 0));
-  const [shape, setShape] = useState<'Dikdörtgen / Kare' | 'Yuvarlak'>(item?.shape === 'round' ? 'Yuvarlak' : 'Dikdörtgen / Kare');
+  const [shape, setShape] = useState<'Dikdörtgen / Kare' | 'Yuvarlak' | 'Boru'>(
+    item?.shape === 'round' ? 'Yuvarlak' : item?.shape === 'pipe' ? 'Boru' : 'Dikdörtgen / Kare');
   const [a, setA] = useState(numInput(item?.dim_a ?? 0));
   const [b, setB] = useState(numInput(item?.dim_b ?? 0));
   const [len, setLen] = useState(numInput(item?.length_mm ?? 0));
@@ -36,7 +37,7 @@ export function MaterialForm({ item, onClose, onSaved }: { item: StockItem | nul
   }, [repo, item]);
 
   const isHam = category === 'Hammadde';
-  const sh = shape === 'Yuvarlak' ? 'round' : 'rect';
+  const sh = shape === 'Yuvarlak' ? 'round' : shape === 'Boru' ? 'pipe' : 'rect';
   const density = types.find((t) => t.name === grade)?.density ?? 0;
   const weight = useMemo(() => (isHam ? calcUnitWeight(sh, n(a), sh === 'round' ? 0 : n(b), n(len), density) : 0),
     [isHam, sh, a, b, len, density]);
@@ -45,7 +46,7 @@ export function MaterialForm({ item, onClose, onSaved }: { item: StockItem | nul
   const save = async () => {
     if (!name.trim()) return setErr('Bileşen adı zorunludur.');
     try {
-      const { image, oldToDelete } = resolvePhoto(item?.image, photo, 'malzeme');
+      const { image, oldToDelete } = await resolvePhoto(item?.image, photo, 'malzeme');
       const id = await repo.stock.saveMaterial({
         name, category, unit, min_qty: n(minQty), unit_cost: n(cost), shape: isHam ? sh : null, dim_a: n(a), dim_b: n(b),
         length_mm: n(len), grade: isHam ? grade : null, kg_price: isHam ? n(kg) : null, image,
@@ -69,11 +70,21 @@ export function MaterialForm({ item, onClose, onSaved }: { item: StockItem | nul
 
       {isHam ? (
         <>
-          <ChoiceField label="Kesit" value={shape} options={['Dikdörtgen / Kare', 'Yuvarlak'] as const} onChange={setShape} />
+          <ChoiceField label="Kesit" value={shape} options={['Dikdörtgen / Kare', 'Yuvarlak', 'Boru'] as const} onChange={setShape} />
           {sh === 'rect' ? (
             <>
               <NumberField label="En (mm)" value={a} onChange={setA} />
               <NumberField label="Boy (mm)" value={b} onChange={setB} />
+            </>
+          ) : sh === 'pipe' ? (
+            <>
+              <NumberField label="Dış Çap (mm)" value={a} onChange={setA} />
+              <NumberField label="Et Kalınlığı (mm)" value={b} onChange={setB} />
+              {n(a) > 0 && n(b) > 0 && 2 * n(b) > n(a) ? (
+                <Banner tone="red" text="Et kalınlığı dış çapın yarısından büyük olamaz." />
+              ) : n(a) > 0 && n(b) > 0 ? (
+                <Muted>İç çap: {num(n(a) - 2 * n(b))} mm</Muted>
+              ) : null}
             </>
           ) : (
             <NumberField label="Çap (mm)" value={a} onChange={setA} />

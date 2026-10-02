@@ -10,9 +10,13 @@
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx"
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
   ],
   "exclude": [
-    "tests"
+    "tests",
+    "server",
+    "tools"
   ]
 }

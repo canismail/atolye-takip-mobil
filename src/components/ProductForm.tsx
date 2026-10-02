@@ -23,7 +23,7 @@ export function ProductForm({ product, onClose, onSaved }: { product: Product | 
   const save = async () => {
     if (!name.trim()) return setErr('Ürün adı zorunludur.');
     try {
-      const { image, oldToDelete } = resolvePhoto(product?.image, photo, 'urun');
+      const { image, oldToDelete } = await resolvePhoto(product?.image, photo, 'urun');
       const id = await repo.products.save({ name, category, icon, unit_price: n(price), status, description: desc, image }, product?.id);
       deleteImage(oldToDelete);
       bump();

@@ -13,7 +13,7 @@ run npx expo install expo-updates || fail "expo-updates kurulumu"
 if ! grep -q '"projectId"' app.json; then
   run npx eas-cli@latest init --non-interactive --force || fail "eas init (proje oluşturma)"
 fi
-run npx eas-cli@latest update --branch production --message "ilk surum" --non-interactive || fail "eas update (yükleme)"
+run npx eas-cli@latest update --branch production --environment production --message "ilk surum" --non-interactive || fail "eas update (yükleme)"
 
 echo
 echo "Yükleme bitti. Yukarıdaki çıktıda 'Update link' / QR görünür."
