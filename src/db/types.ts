@@ -36,6 +36,8 @@ export interface StockItem {
   product_id: number | null;
   image: string | null;
   photo: string | null;
+  /** Ürün satırlarında ürünün satış fiyatı. */
+  sale_price?: number | null;
   status: StockStatus;
   value: number;
   size: string;

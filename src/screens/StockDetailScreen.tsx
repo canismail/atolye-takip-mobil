@@ -42,6 +42,7 @@ export default function StockDetailScreen() {
         ) : null}
         <InfoRow label="Minimum stok" value={`${num(item.min_qty)} ${item.unit}`} />
         <InfoRow label="Birim maliyet" value={num(item.unit_cost)} />
+        {item.product_id ? <InfoRow label="Satış fiyatı" value={num(item.sale_price ?? 0)} /> : null}
         <InfoRow label="Stok değeri" value={num(item.value)} />
         <ButtonRow>
           <Button kind="primary" icon="swap-vertical" title="Stok Hareketi" onPress={() => setMove(true)} />

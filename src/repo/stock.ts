@@ -22,6 +22,10 @@ export interface MaterialInput {
   image?: string | null;
 }
 
+export const STOCK_VALUE_SQL =
+  'SELECT COALESCE(SUM(s.quantity * CASE WHEN s.product_id IS NOT NULL THEN COALESCE(p.unit_price,0) ELSE s.unit_cost END),0) ' +
+  'FROM stock_items s LEFT JOIN products p ON p.id=s.product_id WHERE s.in_stock=1';
+
 export function makeStockRepo(db: Db, settings: SettingsRepo, products: { withStats(): Promise<any[]> }) {
   async function list(opts: { inStock?: boolean; withProducts?: boolean } = {}): Promise<StockItem[]> {
     const near = Number((await settings.get('near_min_pct')) || 20);
@@ -29,12 +33,13 @@ export function makeStockRepo(db: Db, settings: SettingsRepo, products: { withSt
     if (opts.inStock) where.push('s.in_stock=1');
     if (!opts.withProducts) where.push('s.product_id IS NULL');
     const rows = await db.all<StockItem>(
-      'SELECT s.*, COALESCE(s.image, p.image) AS photo FROM stock_items s LEFT JOIN products p ON p.id=s.product_id' +
+      'SELECT s.*, COALESCE(s.image, p.image) AS photo, p.unit_price AS sale_price FROM stock_items s LEFT JOIN products p ON p.id=s.product_id' +
         (where.length ? ' WHERE ' + where.join(' AND ') : '') + ' ORDER BY s.code',
     );
     for (const r of rows) {
       r.status = stockStatus(r.quantity, r.min_qty, near);
-      r.value = r.quantity * r.unit_cost;
+      // Ürün (mamul) satırlarında değer satış fiyatı, malzemelerde maliyet üzerinden
+      r.value = r.quantity * (r.product_id ? r.sale_price ?? 0 : r.unit_cost);
       r.size = sizeLabel(r);
     }
     return rows;
@@ -172,7 +177,7 @@ export function makeStockRepo(db: Db, settings: SettingsRepo, products: { withSt
   }
 
   async function stockValue(): Promise<number> {
-    return scalar(db, 'SELECT COALESCE(SUM(quantity*unit_cost),0) FROM stock_items WHERE in_stock=1');
+    return scalar(db, STOCK_VALUE_SQL);
   }
 
   return { forProduct, list, get, saveMaterial, recalcHammadde, movements, addMovement, addToStock, addProductToStock,

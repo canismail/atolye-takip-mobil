@@ -1,6 +1,7 @@
 import type { Db } from '../db/types';
 import { monthKey } from '../domain/format';
 import { scalar } from './helpers';
+import { STOCK_VALUE_SQL } from './stock';
 
 export interface MonthSummary {
   month: string; sales: number; income: number; production: number; personnel: number; other: number; net: number;
@@ -73,7 +74,7 @@ export function makeMetricsRepo(db: Db) {
     }
     return total / 60;
   }
-  const stockValue = () => scalar(db, 'SELECT COALESCE(SUM(quantity*unit_cost),0) FROM stock_items WHERE in_stock=1');
+  const stockValue = () => scalar(db, STOCK_VALUE_SQL);
 
   /** Satılan ürünlerin reçete malzeme maliyeti / mevcut stok değeri (yıllıklandırılmış). */
   async function stockTurnover(year: string): Promise<number> {

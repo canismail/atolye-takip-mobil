@@ -426,6 +426,22 @@ test('1050 (Çelik) malzeme cinsi: yeni kurulumda var, eski veritabanına bir ke
   assert.deepEqual((await r.settings.materialTypes()).map((t) => t.name), ['Alüminyum']);
 });
 
+test('stok değeri: ürün satırı satış fiyatından, malzeme maliyetten', async () => {
+  const r = await fresh();
+  const pid = await r.products.save({ name: 'Vana', category: 'Metal Ürün', icon: '📦', unit_price: 500, status: 'Aktif', description: '' });
+  await r.stock.addProductToStock(pid);
+  const row = (await r.stock.forProduct(pid))!;
+  await r.stock.addMovement(row.id, 10, 'giriş');
+  const m = await r.stock.saveMaterial({ name: 'Cıvata', category: 'Bağlantı', unit: 'adet', min_qty: 0, unit_cost: 25 });
+  await r.stock.addToStock(m);
+  await r.stock.addMovement(m, 4, 'giriş');
+  const rows = await r.stock.list({ inStock: true, withProducts: true });
+  assert.equal(rows.find((x) => x.id === row.id)!.value, 5000);
+  assert.equal(rows.find((x) => x.id === m)!.value, 100);
+  assert.equal(await r.stock.stockValue(), 5100);
+  assert.equal(await r.metrics.stockValue(), 5100);
+});
+
 for (const [name, fn] of tests) {
   try {
     await fn();
