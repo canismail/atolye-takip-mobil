@@ -10,6 +10,8 @@ export interface BackupFile {
 }
 
 /** Tüm tabloları JSON olarak dışa aktarır. Fotoğraflar dahil değildir (masaüstündeki gibi). */
+const OPTIONAL_TABLES = ['machines', 'plan_overrides'];
+
 export function makeBackupRepo(db: Db) {
   async function exportAll(): Promise<BackupFile> {
     const tables: BackupFile['tables'] = {};
@@ -23,8 +25,11 @@ export function makeBackupRepo(db: Db) {
     await db.exec('PRAGMA foreign_keys = OFF');
     try {
       await db.transaction(async () => {
-        for (const t of [...BACKUP_TABLES].reverse()) await db.run(`DELETE FROM ${t}`);
+        // eski yedeklerde makine tabloları yoktur: mevcut makineler silinmesin
+        const skip = (t: string) => OPTIONAL_TABLES.includes(t) && !(t in file.tables);
+        for (const t of [...BACKUP_TABLES].reverse()) if (!skip(t)) await db.run(`DELETE FROM ${t}`);
         for (const t of BACKUP_TABLES) {
+          if (skip(t)) continue;
           const rows = file.tables[t] ?? [];
           for (const row of rows) {
             const cols = Object.keys(row);

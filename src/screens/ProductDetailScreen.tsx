@@ -110,6 +110,9 @@ export default function ProductDetailScreen() {
                 <Text style={{ fontWeight: '600', color: colors.text, flexShrink: 1 }}>{o.seq}. {o.name}</Text>
                 <Text style={{ fontWeight: '700', color: colors.text }}>{num(o.minutes)} dk</Text>
               </View>
+              {o.machine_type || o.setup_minutes ? (
+                <Muted>{o.machine_type ? `Makine: ${o.machine_type}` : ''}{o.machine_type && o.setup_minutes ? ' · ' : ''}{o.setup_minutes ? `Sök-tak ${num(o.setup_minutes)} dk` : ''}</Muted>
+              ) : null}
               <ButtonRow>
                 <Button compact icon="create-outline" title="Düzenle" onPress={() => setOpForm(o)} />
                 <Button compact icon="arrow-up" title="" disabled={i === 0} onPress={() => move('product_operations', o.id, -1)} />
@@ -178,15 +181,23 @@ function OpForm({ productId, row, onClose }: { productId: number; row: ProductOp
   const { repo, bump } = useApp();
   const [name, setName] = useState(row?.name ?? '');
   const [min, setMin] = useState(numInput(row?.minutes ?? 0));
+  const [mtype, setMtype] = useState<string>(row?.machine_type ?? '');
+  const [setup, setSetup] = useState(numInput(row?.setup_minutes ?? 0));
+  const [types, setTypes] = useState<Option<string>[]>([]);
   const [err, setErr] = useState<string | null>(null);
+  React.useEffect(() => {
+    repo.machines.types().then((t) => setTypes([{ value: '', label: 'Fark etmez (herhangi bir makine)' }, ...t.map((x) => ({ value: x, label: x }))]));
+  }, [repo]);
   const save = async () => {
-    try { await repo.products.saveOperation(productId, name, n(min), row?.id); bump(); onClose(); }
+    try { await repo.products.saveOperation(productId, name, n(min), row?.id, mtype, n(setup)); bump(); onClose(); }
     catch (e) { setErr(String((e as Error).message ?? e)); }
   };
   return (
     <FormModal visible title={row ? 'Operasyonu Düzenle' : 'Operasyon Ekle'} onClose={onClose} onSave={save} error={err}>
       <TextField label="Operasyon *" value={name} onChange={setName} placeholder="Örn. Torna, Kaynak, Montaj" autoCapitalize="words" />
       <NumberField label="Süre (dk)" value={min} onChange={setMin} suffix="dk" />
+      <SelectField label="Makine türü" value={mtype} options={types} onChange={setMtype} placeholder="Seçin" />
+      <NumberField label="Sök-tak süresi (dk)" value={setup} onChange={setSetup} suffix="dk" hint="Boş/0 ise makinenin parça ayarlama süresi (varsayılan 2 saat) kullanılır." />
     </FormModal>
   );
 }

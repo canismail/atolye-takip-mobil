@@ -7,6 +7,7 @@ import { useApp, useData } from '../state/app';
 import { ChoiceField, DateField, FormModal, n, NumberField, SelectField, type Option } from '../ui/forms';
 import { Badge, Button, Card, EmptyState, InfoRow, Kpi, KpiGrid, Muted, Screen, SearchBar, SectionTitle } from '../ui/kit';
 import { colors, statusTone } from '../ui/theme';
+import { MachinePlanSection } from './MachinePlan';
 
 const WEEKDAYS = { '5': 'Pzt - Cum (5 gün)', '6': 'Pzt - Cmt (6 gün)', '7': 'Haftanın 7 günü' } as const;
 
@@ -96,6 +97,8 @@ export default function PlanningScreen() {
       })}
 
       <Card style={{ gap: 6 }}><SectionTitle>Üretim Hesaplayıcı</SectionTitle>{calc}</Card>
+
+      <MachinePlanSection />
 
       <SectionTitle>Açık Siparişler İçin Plan</SectionTitle>
       <Muted>Bekleyen ve üretimdeki siparişler termin sırasına göre, bugünden başlayarak tek hat halinde planlanır. Tamamlanan ilerleme (%) düşülür.</Muted>

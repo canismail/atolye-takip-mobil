@@ -1,6 +1,7 @@
 import type { Db } from '../db/types';
 import { makeBackupRepo } from './backup';
 import { makeCustomersRepo } from './customers';
+import { makeMachinesRepo } from './machines';
 import { makeMetricsRepo } from './metrics';
 import { makeOrdersRepo } from './orders';
 import { makeProductsRepo } from './products';
@@ -20,6 +21,7 @@ export function createRepo(db: Db) {
     products,
     stock,
     customers: makeCustomersRepo(db),
+    machines: makeMachinesRepo(db),
     sales: makeSalesRepo(db),
     orders: makeOrdersRepo(db),
     metrics: makeMetricsRepo(db),

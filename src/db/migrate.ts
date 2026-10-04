@@ -1,5 +1,8 @@
 import type { Db } from './types';
-import { DEFAULT_SETTINGS, PRODUCT_MIGRATIONS, SCHEMA, STOCK_CATEGORIES, STOCK_MIGRATIONS } from './schema';
+import {
+  DEFAULT_MACHINES, DEFAULT_SETTINGS, MACHINE_MIGRATIONS, OPERATION_MIGRATIONS, PRODUCT_MIGRATIONS, SCHEMA, STOCK_CATEGORIES,
+  STOCK_MIGRATIONS,
+} from './schema';
 
 /** Tabloları kurar, eksik sütunları ekler ve varsayılan ayarları yazar (masaüstündeki init_db). */
 export async function initDb(db: Db): Promise<void> {
@@ -17,6 +20,14 @@ export async function initDb(db: Db): Promise<void> {
   for (const [col, ddl] of PRODUCT_MIGRATIONS) {
     if (!haveProd.has(col)) await db.run(`ALTER TABLE products ADD COLUMN ${col} ${ddl}`);
   }
+  const haveOps = new Set((await db.all<{ name: string }>('PRAGMA table_info(product_operations)')).map((r) => r.name));
+  for (const [col, ddl] of OPERATION_MIGRATIONS) {
+    if (!haveOps.has(col)) await db.run(`ALTER TABLE product_operations ADD COLUMN ${col} ${ddl}`);
+  }
+  const haveMach = new Set((await db.all<{ name: string }>('PRAGMA table_info(machines)')).map((r) => r.name));
+  for (const [col, ddl] of MACHINE_MIGRATIONS) {
+    if (!haveMach.has(col)) await db.run(`ALTER TABLE machines ADD COLUMN ${col} ${ddl}`);
+  }
   const marks = STOCK_CATEGORIES.map(() => '?').join(',');
   await db.run(
     `UPDATE stock_items SET category='Diğer' WHERE product_id IS NULL AND category NOT IN (${marks})`,
@@ -26,6 +37,19 @@ export async function initDb(db: Db): Promise<void> {
     await db.run('INSERT OR IGNORE INTO settings(key, value) VALUES (?, ?)', [k, v]);
   }
   await seedMaterialType(db, '1050 (Çelik)', 7.85, 'seed_mt_1050');
+  await seedMachines(db);
+}
+
+/** Atölyenin 4 makinesini ilk kurulumda bir kez ekler (sonradan silinirse geri gelmez). */
+async function seedMachines(db: Db): Promise<void> {
+  if (await db.get("SELECT 1 FROM settings WHERE key='seed_machines'")) return;
+  const cnt = await db.get<{ c: number }>('SELECT COUNT(*) AS c FROM machines');
+  if (!cnt || cnt.c === 0) {
+    for (const [name, type] of DEFAULT_MACHINES) {
+      await db.run('INSERT INTO machines(name, type, daily_hours, active) VALUES (?,?,8,1)', [name, type]);
+    }
+  }
+  await db.run("INSERT OR REPLACE INTO settings(key, value) VALUES ('seed_machines', '1')");
 }
 
 /** Var olan veritabanlarına yeni bir malzeme cinsini bir kez ekler (kullanıcı sonradan silerse geri gelmez). */

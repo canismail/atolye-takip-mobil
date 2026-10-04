@@ -106,6 +106,23 @@ export const SCHEMA: string[] = [
     created_at   TEXT NOT NULL DEFAULT (date('now','localtime')),
     completed_at TEXT
   )`,
+  `CREATE TABLE IF NOT EXISTS machines (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT NOT NULL,
+    type        TEXT NOT NULL DEFAULT 'Torna',
+    daily_hours REAL NOT NULL DEFAULT 8,
+    active      INTEGER NOT NULL DEFAULT 1,
+    note        TEXT,
+    changeover_minutes REAL NOT NULL DEFAULT 120
+  )`,
+  `CREATE TABLE IF NOT EXISTS plan_overrides (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    work_order_id INTEGER NOT NULL,
+    op_id         INTEGER NOT NULL,
+    machine_id    INTEGER,
+    day           TEXT,
+    UNIQUE(work_order_id, op_id)
+  )`,
 ];
 
 export const DEFAULT_MATERIAL_TYPES = [
@@ -138,6 +155,7 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
   plan_week_days: '5',
   plan_buffer_pct: '15',
   plan_workers: '1',
+  plan_shift_start: '08:00',
   material_types: JSON.stringify(DEFAULT_MATERIAL_TYPES),
 };
 
@@ -149,6 +167,14 @@ export const STOCK_MIGRATIONS: [string, string][] = [
   ['kg_price', 'REAL'], ['in_stock', 'INTEGER NOT NULL DEFAULT 0'], ['product_id', 'INTEGER'], ['image', 'TEXT'],
 ];
 export const PRODUCT_MIGRATIONS: [string, string][] = [['image', 'TEXT']];
+/** Operasyon: makine türü, sök-tak (hazırlık) süresi (parallel/part eski masaüstü sürümlerinden kalma, kullanılmıyor) */
+export const OPERATION_MIGRATIONS: [string, string][] = [
+  ['machine_type', 'TEXT'], ['setup_minutes', 'REAL NOT NULL DEFAULT 0'], ['parallel', 'INTEGER NOT NULL DEFAULT 0'], ['part', 'TEXT'],
+];
+export const MACHINE_MIGRATIONS: [string, string][] = [['changeover_minutes', 'REAL NOT NULL DEFAULT 120']];
+export const DEFAULT_MACHINES: [string, string][] = [
+  ['Torna 1', 'Torna'], ['Torna 2', 'Torna'], ['3 Eksen İşleme Merkezi', '3 Eksen'], ['4 Eksen İşleme Merkezi', '4 Eksen'],
+];
 export const UNITS = ['adet', 'kg', 'gr', 'lt', 'metre', 'paket', 'takım'];
 export const PRODUCT_CATEGORIES = ['Metal Ürün', 'Yedek Parça', 'Makine', 'Diğer'];
 export const PRODUCT_STATUSES = ['Aktif', 'Pasif'];
@@ -158,8 +184,8 @@ export const ORDER_STATUSES = ['Bekliyor', 'Üretimde', 'Tamamlandı', 'İptal']
 export const SALE_STATUSES = ['Bekliyor', 'Ödendi'];
 export const CUSTOMER_STATUSES = ['Aktif', 'Pasif'];
 export const TABLES_FOR_RESET = [
-  'transactions', 'sales', 'work_orders', 'product_materials', 'product_operations',
+  'plan_overrides', 'transactions', 'sales', 'work_orders', 'product_materials', 'product_operations',
   'products', 'stock_movements', 'stock_items', 'customers',
 ];
 export const BACKUP_TABLES = ['settings', 'customers', 'products', 'stock_items', 'stock_movements',
-  'product_materials', 'product_operations', 'sales', 'transactions', 'work_orders'];
+  'product_materials', 'product_operations', 'sales', 'transactions', 'work_orders', 'machines', 'plan_overrides'];

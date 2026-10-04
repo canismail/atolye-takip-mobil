@@ -9,6 +9,7 @@ import { colors } from '../ui/theme';
 
 const ITEMS: { path: string; title: string; sub: string; icon: React.ComponentProps<typeof Ionicons>['name'] }[] = [
   { path: '/planning', title: 'Üretim Planı', sub: 'Günlük / haftalık kapasite, termin takvimi', icon: 'calendar-outline' },
+  { path: '/machines', title: 'Makineler', sub: 'Tezgâh tanımı, aktif/pasif, günlük çalışma saati', icon: 'hardware-chip-outline' },
   { path: '/materials', title: 'Malzeme Bileşenleri', sub: 'Hammadde, yedek parça, ağırlık ve maliyet', icon: 'grid-outline' },
   { path: '/customers', title: 'Müşteriler', sub: 'Cari bilgileri ve bakiyeler', icon: 'people-outline' },
   { path: '/sales', title: 'Satışlar', sub: 'Satış kayıtları ve tahsilat', icon: 'cash-outline' },

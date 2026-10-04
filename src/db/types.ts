@@ -57,7 +57,14 @@ export interface ProductMaterial {
   id: number; seq: number; quantity: number; code: string; name: string; unit: string;
   unit_cost: number; cost: number; stock_id: number;
 }
-export interface ProductOperation { id: number; product_id: number; seq: number; name: string; minutes: number }
+export interface ProductOperation {
+  id: number; product_id: number; seq: number; name: string; minutes: number;
+  machine_type?: string | null; setup_minutes?: number | null;
+}
+export interface Machine {
+  id: number; name: string; type: string; daily_hours: number; active: number; note: string | null; changeover_minutes: number;
+}
+export interface PlanOverride { id: number; work_order_id: number; op_id: number; machine_id: number | null; day: string | null }
 
 export interface Customer {
   id: number; code: string; name: string; contact: string | null; phone: string | null; email: string | null;

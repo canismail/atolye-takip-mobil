@@ -85,15 +85,20 @@ export function makeProductsRepo(db: Db) {
   async function operations(productId: number): Promise<ProductOperation[]> {
     return db.all<ProductOperation>('SELECT * FROM product_operations WHERE product_id=? ORDER BY seq, id', [productId]);
   }
-  async function saveOperation(productId: number, name: string, minutes: number, rowId?: number): Promise<void> {
+  /** machineType: boş = herhangi bir makine · setupMinutes: boş/0 = makinenin varsayılan ayarlama süresi */
+  async function saveOperation(productId: number, name: string, minutes: number, rowId?: number,
+    machineType?: string | null, setupMinutes?: number): Promise<void> {
     if (!name.trim()) throw new Error('Operasyon adı zorunludur.');
+    const mt = (machineType ?? '').trim() || null;
+    const setup = Math.max(0, Number(setupMinutes ?? 0) || 0);
     if (rowId !== undefined) {
-      await db.run('UPDATE product_operations SET name=?, minutes=? WHERE id=?', [name.trim(), minutes, rowId]);
+      await db.run('UPDATE product_operations SET name=?, minutes=?, machine_type=?, setup_minutes=? WHERE id=?',
+        [name.trim(), minutes, mt, setup, rowId]);
       return;
     }
     const seq = await scalar(db, 'SELECT COALESCE(MAX(seq),0)+1 FROM product_operations WHERE product_id=?', [productId]);
-    await db.run('INSERT INTO product_operations(product_id, seq, name, minutes) VALUES (?,?,?,?)',
-      [productId, seq, name.trim(), minutes]);
+    await db.run('INSERT INTO product_operations(product_id, seq, name, minutes, machine_type, setup_minutes) VALUES (?,?,?,?,?,?)',
+      [productId, seq, name.trim(), minutes, mt, setup]);
   }
 
   // ---- sıralama (reçete ve operasyon ortak)

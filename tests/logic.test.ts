@@ -6,6 +6,7 @@ import { calcUnitWeight, hammaddeUnitCost, stockStatus, sizeLabel } from '../src
 import { num, money, parseNum, trLower, trAscii, dmy, numInput } from '../src/domain/format';
 import * as pl from '../src/domain/planning';
 import { statusForProgress } from '../src/repo/orders';
+import * as mp from '../src/domain/machinePlan';
 
 let passed = 0;
 const tests: [string, () => Promise<void>][] = [];
@@ -440,6 +441,49 @@ test('stok değeri: ürün satırı satış fiyatından, malzeme maliyetten', as
   assert.equal(rows.find((x) => x.id === m)!.value, 100);
   assert.equal(await r.stock.stockValue(), 5100);
   assert.equal(await r.metrics.stockValue(), 5100);
+});
+
+test('makineler: varsayılan tohum, kayıt, aktif/pasif, operasyonda makine türü', async () => {
+  const r = await fresh();
+  const ms = await r.machines.list();
+  assert.ok(ms.length >= 4);
+  assert.ok((await r.machines.types()).includes('Torna'));
+  const id = await r.machines.save({ name: 'Taşlama 1', type: 'Taşlama', daily_hours: 9, active: true, changeover_minutes: 30 });
+  await r.machines.setActive(id, false);
+  assert.equal((await r.machines.list(true)).some((m) => m.id === id), false);
+  await assert.rejects(r.machines.save({ name: '', type: 'x', daily_hours: 8, active: true, changeover_minutes: 0 }));
+  const pid = await r.products.save({ name: 'Su Başlığı', category: 'Metal Ürün', icon: '📦', unit_price: 1, status: 'Aktif', description: '' });
+  await r.products.saveOperation(pid, 'Tornalama 1', 20, undefined, 'Torna', 15);
+  const op = (await r.products.operations(pid))[0];
+  assert.equal(op.machine_type, 'Torna');
+  assert.equal(op.setup_minutes, 15);
+});
+
+test('makine planı: aşama, sök-tak, elle yerleştirme (Python ile aynı sonuçlar)', async () => {
+  const machines = [
+    { id: 1, name: 'Torna 1', type: 'Torna', daily_hours: 10, active: 1, changeover_minutes: 120 },
+    { id: 2, name: 'Torna 2', type: 'Torna', daily_hours: 10, active: 1, changeover_minutes: 120 },
+    { id: 3, name: '3 Eksen', type: '3 Eksen', daily_hours: 10, active: 1, changeover_minutes: 120 },
+  ];
+  const op = (key: number, name: string, minutes: number, machineType: string) => ({ key, name, minutes, setup: 0, machineType });
+  const orders = [{ key: 1, label: 'IE-1', product: 'Su Başlığı', qty: 10, due: null,
+    ops: [op(1, 'Tornalama 1', 20, 'Torna'), op(2, 'Tornalama 2', 15, 'Torna'), op(3, 'Dik işleme', 10, '3 Eksen'), op(4, 'Tornalama 3', 5, 'Torna')] }];
+  const plan = mp.schedulePlan(orders, machines, new Date(2026, 9, 5), 5, 0);
+  const it = plan.orders[0].items;
+  const by = (n: string) => it.find((x) => x.op === n)!;
+  assert.equal(by('Tornalama 1').machine, 'Torna 1');
+  assert.equal(mp.clock(by('Tornalama 1').end), '13:20');
+  assert.equal(by('Tornalama 2').machine, 'Torna 2');
+  assert.equal(mp.clock(by('Tornalama 2').end), '12:30');
+  assert.equal(by('Dik işleme').machine, '3 Eksen');
+  assert.equal(mp.clock(by('Dik işleme').start), '13:20');
+  assert.equal(mp.clock(by('Dik işleme').end), '17:00');
+  assert.equal(by('Tornalama 3').machine, 'Torna 1');
+  assert.equal(mp.clock(by('Tornalama 3').end), '09:50');
+  assert.equal(mp.isoDay(by('Tornalama 3').endDate), '2026-10-06');
+  const forced: mp.OverrideMap = new Map([[mp.overrideKey(1, 1), { machineId: 2, day: null }]]);
+  const p2 = mp.schedulePlan(orders, machines, new Date(2026, 9, 5), 5, 0, 0, forced);
+  assert.equal(p2.orders[0].items.find((x) => x.op === 'Tornalama 1')!.machine, 'Torna 2');
 });
 
 for (const [name, fn] of tests) {

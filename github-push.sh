@@ -5,7 +5,7 @@ find .git -name '*.lock' -delete 2>/dev/null
 find .git/objects -name 'tmp_obj_*' -delete 2>/dev/null
 git rm -q --cached package.json.bak 2>/dev/null
 git add -A
-git diff --cached --quiet || git commit -q -m "Temizlik: .bak dosyasi kaldirildi
+git diff --cached --quiet || git commit -q -m "Yeni: makine bazli uretim plani (makineler, sok-tak, gun bazli cizelge, elle tasima), stok maliyet/net kar
 
 Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01LRVec6Am2Z9Cr9LwEXxnCv"

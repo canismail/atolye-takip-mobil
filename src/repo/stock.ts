@@ -180,7 +180,11 @@ export function makeStockRepo(db: Db, settings: SettingsRepo, products: { withSt
     return scalar(db, STOCK_VALUE_SQL);
   }
 
+  async function stockCost(): Promise<number> {
+    return scalar(db, 'SELECT COALESCE(SUM(quantity * unit_cost),0) FROM stock_items WHERE in_stock=1');
+  }
+
   return { forProduct, list, get, saveMaterial, recalcHammadde, movements, addMovement, addToStock, addProductToStock,
-    removeFromStock, remove, usedIn, stockValue };
+    removeFromStock, remove, usedIn, stockValue, stockCost };
 }
 export type StockRepo = ReturnType<typeof makeStockRepo>;

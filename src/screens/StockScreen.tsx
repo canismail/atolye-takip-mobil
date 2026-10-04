@@ -22,6 +22,7 @@ export default function StockScreen() {
   const { data, loading, error, reload } = useData(async (r) => ({
     items: await r.stock.list({ inStock: true, withProducts: true }),
     value: await r.stock.stockValue(),
+    cost: await r.stock.stockCost(),
   }));
   const items = data?.items ?? [];
   const list = useMemo(() => items.filter((i) => (cat === 'Tümü' || i.category === cat) && (st === 'Tüm Durumlar' || i.status === st) && matches(q, i.code, i.name, i.category, i.grade, i.size)), [items, q, cat, st]);
@@ -30,7 +31,9 @@ export default function StockScreen() {
     <Screen loading={loading && !data} error={error} onRefresh={reload} fab={{ onPress: () => setAdd(true) }}>
       <KpiGrid>
         <Kpi label="Stok Kalemi" value={num(items.length)} icon="file-tray-stacked-outline" tone="blue" />
-        <Kpi label="Stok Değeri" value={money(data?.value ?? 0)} icon="cash-outline" tone="green" />
+                <Kpi label="Toplam Maliyet" value={money(data?.cost ?? 0)} icon="wallet-outline" tone="purple" />
+        <Kpi label="Toplam Satış Değeri" value={money(data?.value ?? 0)} icon="pricetag-outline" tone="blue" />
+        <Kpi label="Net Kâr" value={money((data?.value ?? 0) - (data?.cost ?? 0))} icon="trending-up-outline" tone={(data?.value ?? 0) - (data?.cost ?? 0) >= 0 ? 'green' : 'red'} />
         <Kpi label="Kritik Stok" value={num(items.filter((i) => i.status === 'Kritik').length)} icon="alert-circle-outline" tone="red" />
         <Kpi label="Minimuma Yakın" value={num(items.filter((i) => i.status === 'Minimuma Yakın').length)} icon="warning-outline" tone="yellow" />
       </KpiGrid>
