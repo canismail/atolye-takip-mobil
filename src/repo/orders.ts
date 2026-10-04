@@ -17,7 +17,8 @@ export function statusForProgress(progress: number, current: string): string {
 export function makeOrdersRepo(db: Db) {
   async function list(): Promise<WorkOrder[]> {
     return db.all<WorkOrder>(`SELECT w.*, c.name AS customer, p.name AS product,
-        (SELECT COALESCE(SUM(o.minutes),0) FROM product_operations o WHERE o.product_id=w.product_id) AS unit_minutes
+        (SELECT COALESCE(SUM(o.minutes),0) FROM product_operations o WHERE o.product_id=w.product_id) AS unit_minutes,
+        (SELECT COALESCE(SUM(o.setup_minutes),0) FROM product_operations o WHERE o.product_id=w.product_id) AS setup_total
       FROM work_orders w LEFT JOIN customers c ON c.id=w.customer_id LEFT JOIN products p ON p.id=w.product_id
       ORDER BY CASE w.status WHEN 'Tamamlandı' THEN 2 WHEN 'İptal' THEN 3 ELSE 1 END, w.due_date, w.id`);
   }

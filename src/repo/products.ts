@@ -13,6 +13,7 @@ export function makeProductsRepo(db: Db) {
         (SELECT COUNT(*) FROM product_materials m WHERE m.product_id=p.id) AS material_count,
         (SELECT COUNT(*) FROM product_operations o WHERE o.product_id=p.id) AS operation_count,
         (SELECT COALESCE(SUM(o.minutes),0) FROM product_operations o WHERE o.product_id=p.id) AS total_minutes,
+        (SELECT COALESCE(SUM(o.setup_minutes),0) FROM product_operations o WHERE o.product_id=p.id) AS setup_total,
         (SELECT COALESCE(SUM(m.quantity*s.unit_cost),0) FROM product_materials m
             JOIN stock_items s ON s.id=m.stock_id WHERE m.product_id=p.id) AS material_cost
       FROM products p ORDER BY p.code`);

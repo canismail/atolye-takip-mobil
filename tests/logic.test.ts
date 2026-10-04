@@ -457,6 +457,7 @@ test('makineler: varsayılan tohum, kayıt, aktif/pasif, operasyonda makine tür
   const op = (await r.products.operations(pid))[0];
   assert.equal(op.machine_type, 'Torna');
   assert.equal(op.setup_minutes, 15);
+  assert.equal((await r.products.get(pid))!.setup_total, 15);
 });
 
 test('makine planı: aşama, sök-tak, elle yerleştirme (Python ile aynı sonuçlar)', async () => {

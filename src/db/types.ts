@@ -51,7 +51,7 @@ export interface Product {
   status: string; description: string | null; created_at: string; image: string | null;
 }
 export interface ProductStats extends Product {
-  material_count: number; operation_count: number; total_minutes: number; material_cost: number;
+  material_count: number; operation_count: number; total_minutes: number; setup_total: number; material_cost: number;
 }
 export interface ProductMaterial {
   id: number; seq: number; quantity: number; code: string; name: string; unit: string;
@@ -84,6 +84,6 @@ export interface Transaction {
 export interface WorkOrder {
   id: number; code: string; customer_id: number | null; product_id: number; quantity: number;
   due_date: string | null; progress: number; status: string; note: string | null; created_at: string;
-  completed_at: string | null; customer?: string | null; product?: string | null; unit_minutes: number;
+  completed_at: string | null; customer?: string | null; product?: string | null; unit_minutes: number; setup_total: number;
 }
 export interface MaterialType { name: string; density: number }

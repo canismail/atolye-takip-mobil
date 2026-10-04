@@ -38,18 +38,18 @@ export default function PlanningScreen() {
   if (prod) {
     const unit = buffered(prod.total_minutes, P.buffer);
     const qtyN = Math.max(1, Math.floor(n(calcQty)));
-    const a = allocate(qtyN * unit, parseISO(calcStart) ?? new Date(), 0, P.cap, P.weekDays);
+    const a = allocate((prod.setup_total ?? 0) + qtyN * unit, parseISO(calcStart) ?? new Date(), 0, P.cap, P.weekDays);
     const done = unitsDoneByDay(a.chunks, unit);
     calc = (
       <View style={{ gap: 10 }}>
         <SelectField label="Ürün" value={prod.id} options={prodOpts} onChange={setCalcPid} />
         <NumberField label="Adet" value={calcQty} onChange={setCalcQty} />
         <DateField label="Başlangıç" value={calcStart} onChange={setCalcStart} />
-        <InfoRow label="Toplam süre" value={`${num((qtyN * unit) / 60)} saat`} />
+        <InfoRow label="Toplam süre" value={`${num(((prod.setup_total ?? 0) + qtyN * unit) / 60)} saat`} />
         <InfoRow label="İş günü" value={`${a.chunks.length} gün`} />
         <InfoRow label="Bitiş tarihi" value={dmy(a.end)} />
         <InfoRow label="Günlük / haftalık" value={`${perDay(P.cap, unit)} / ${perWeek(P.cap, P.weekDays, unit)} adet`} />
-        <Muted>1 adet: {num(prod.total_minutes)} dk + %{num(P.buffer)} buffer = {num(unit)} dk</Muted>
+        <Muted>1 adet: {num(prod.total_minutes)} dk + %{num(P.buffer)} buffer = {num(unit)} dk{prod.setup_total ? ` · sök-tak (bir kez): ${num(prod.setup_total)} dk` : ''}</Muted>
         {a.chunks.map((c, i) => (
           <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <Text style={{ color: colors.text }}>{dmy(c.day)}</Text>
@@ -88,7 +88,7 @@ export default function PlanningScreen() {
             </View>
             {ok ? (
               <>
-                <Muted>{p.operation_count} operasyon · {num(p.total_minutes)} dk → buffer'lı {num(unit)} dk</Muted>
+                <Muted>{p.operation_count} operasyon · {num(p.total_minutes)} dk → buffer'lı {num(unit)} dk{p.setup_total ? ` · sök-tak ${num(p.setup_total)} dk` : ''}</Muted>
                 <Text style={{ color: colors.text }}>Günlük {perDay(P.cap, unit)} adet · Haftalık {perWeek(P.cap, P.weekDays, unit)} adet</Text>
               </>
             ) : <Muted>Ürün detayından operasyon ekleyin.</Muted>}

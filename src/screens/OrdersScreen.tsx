@@ -65,7 +65,7 @@ export default function OrdersScreen() {
             </View>
             {expanded ? (
               <View style={{ gap: 10, paddingTop: 6, borderTopWidth: 1, borderTopColor: colors.border }}>
-                <InfoRow label="Tahmini süre" value={w.unit_minutes ? `${num((w.unit_minutes * w.quantity) / 60, 1)} saat` : null} />
+                <InfoRow label="Tahmini süre" value={w.unit_minutes ? `${num((w.unit_minutes * w.quantity + (w.setup_total ?? 0)) / 60, 1)} saat` : null} />
                 <InfoRow label="Tamamlanma" value={w.completed_at ? dmy(w.completed_at) : null} />
                 {w.note ? <Muted>{w.note}</Muted> : null}
                 <ButtonRow>
@@ -124,7 +124,7 @@ export function OrderForm({ wo, onClose, defaultProductId }: { wo: WorkOrder | n
       const have = new Map(stocks.map((s) => [s.id, s.quantity]));
       const short = mats.filter((m) => m.quantity * qtyN > (have.get(m.stock_id) ?? 0))
         .map((m) => `${m.name} (gerekli ${num(m.quantity * qtyN)} ${m.unit}, mevcut ${num(have.get(m.stock_id) ?? 0)})`);
-      setNeed({ minutes: (p?.total_minutes ?? 0) * qtyN, short });
+      setNeed({ minutes: (p?.total_minutes ?? 0) * qtyN + (p?.setup_total ?? 0), short });
     })();
   }, [pid, qtyN, repo]);
 

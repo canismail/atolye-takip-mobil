@@ -59,7 +59,7 @@ export default function ProductDetailScreen() {
           </View>
         </View>
         <InfoRow label="Kategori" value={p.category} />
-        <InfoRow label="Toplam süre" value={`${num(p.total_minutes)} dk`} />
+        <InfoRow label="Toplam süre" value={`${num(p.total_minutes + p.setup_total)} dk${p.setup_total ? ` (işleme ${num(p.total_minutes)} + sök-tak ${num(p.setup_total)})` : ''}`} />
         <InfoRow label="Malzeme maliyeti" value={money(p.material_cost)} />
         <InfoRow label="Satış fiyatı" value={money(p.unit_price)} />
         {p.description ? <Muted>{p.description}</Muted> : null}

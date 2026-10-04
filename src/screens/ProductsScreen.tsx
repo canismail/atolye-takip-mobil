@@ -26,7 +26,7 @@ export default function ProductsScreen() {
       {!list.length ? <EmptyState text={data?.length ? 'Filtreye uyan ürün yok.' : 'İlk ürünü eklemek için + düğmesini kullanın.'} /> : null}
       {list.map((p) => (
         <ListRow key={p.id} title={p.name} photo={imageUri(p.image)} emoji={p.icon}
-          subtitle={`${p.code} · ${p.category} · ${p.material_count} malzeme · ${p.operation_count} operasyon (${num(p.total_minutes)} dk)`}
+          subtitle={`${p.code} · ${p.category} · ${p.material_count} malzeme · ${p.operation_count} operasyon (${num(p.total_minutes + p.setup_total)} dk)`}
           meta={money(p.unit_price)} right={<Badge text={p.status} tone={statusTone(p.status)} />}
           badge={p.material_cost ? <Text style={{ color: colors.muted, fontSize: 12 }}>Malzeme maliyeti {money(p.material_cost)}</Text> : undefined}
           onPress={() => router.push(`/product/${p.id}`)} />

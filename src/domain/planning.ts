@@ -83,7 +83,7 @@ export function planParams(S: Record<string, string>): PlanParams {
 }
 
 export interface ScheduleOrderIn {
-  id: number; code: string; quantity: number; progress: number; due_date: string | null; unit_minutes: number;
+  id: number; code: string; quantity: number; progress: number; due_date: string | null; unit_minutes: number; setup_total?: number;
 }
 export interface ScheduleRow<T extends ScheduleOrderIn> {
   w: T; rem: number; need: number; start: Date | null; end: Date | null; state: 'Zamanında' | 'Gecikir' | 'Operasyon yok';
@@ -100,7 +100,7 @@ export function scheduleOrders<T extends ScheduleOrderIn>(orders: T[], P: PlanPa
   for (const w of sorted) {
     const unit = buffered(w.unit_minutes, P.buffer);
     const rem = remainingUnits(w.quantity, w.progress);
-    const need = rem * unit;
+    const need = rem > 0 ? (w.setup_total ?? 0) + rem * unit : 0;
     if (unit <= 0) {
       out.push({ w, rem, need: 0, start: null, end: null, state: 'Operasyon yok' });
       continue;
