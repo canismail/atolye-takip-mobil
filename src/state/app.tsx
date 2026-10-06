@@ -1,7 +1,8 @@
 import { useFocusEffect } from 'expo-router';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
-import { setCurrency } from '../domain/format';
+import { setCurrency, setHidden } from '../domain/format';
+import { checkPassword, loadHidden, saveHidden } from '../services/privacy';
 import type { Repo } from '../repo';
 import { createApiRepo } from '../repo/api';
 import { clearSession, getSession, loadSession, type Session } from '../services/session';
@@ -16,6 +17,11 @@ interface Ctx {
   version: number;
   serverUrl: string;
   logout: () => void;
+  /** Hassas veriler gizli mi? */
+  hidden: boolean;
+  hide: () => void;
+  /** Şifre doğruysa gizlemeyi kaldırır. */
+  unlock: (password: string) => boolean;
 }
 const AppCtx = createContext<Ctx | null>(null);
 
@@ -26,6 +32,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [phase, setPhase] = useState<'boot' | 'login' | 'ready'>('boot');
   const [session, setSession] = useState<Session | null>(null);
+  const [hidden, setHiddenState] = useState(false);
+
+  const applyHidden = useCallback((v: boolean) => {
+    setHidden(v);
+    setHiddenState(v);
+    setVersion((n) => n + 1); // tüm ekranlar yeniden çizilsin
+    saveHidden(v);
+  }, []);
+  const hide = useCallback(() => applyHidden(true), [applyHidden]);
+  const unlock = useCallback((pw: string) => {
+    if (!checkPassword(pw)) return false;
+    applyHidden(false);
+    return true;
+  }, [applyHidden]);
 
   const logout = useCallback(() => {
     clearSession();
@@ -38,6 +58,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       const r = createApiRepo(getSession, logout);
       const s = await r.settings.getAll();
+      const h = await loadHidden();
+      setHidden(h);
+      setHiddenState(h);
       setCurrency(s.currency);
       setSettings(s);
       setRepo(r);
@@ -65,8 +88,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (r) r.settings.getAll().then((s) => { setCurrency(s.currency); setSettings(s); });
   }, []);
 
-  const value = useMemo(() => (repo && session ? { repo, settings, bump, version, serverUrl: session.url, logout } : null),
-    [repo, session, settings, bump, version, logout]);
+  const value = useMemo(() => (repo && session ? { repo, settings, bump, version, serverUrl: session.url, logout, hidden, hide, unlock } : null),
+    [repo, session, settings, bump, version, logout, hidden, hide, unlock]);
 
   if (error && phase === 'boot') {
     return (

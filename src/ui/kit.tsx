@@ -4,6 +4,7 @@ import React from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View,
   type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { isHidden } from '../domain/format';
 import { colors, radius, space, TONES, type Tone } from './theme';
 
 export type IconName = React.ComponentProps<typeof Ionicons>['name'];
@@ -112,6 +113,7 @@ export function ProgressBar({ value, tone = 'blue' }: { value: number; tone?: To
 
 /** Basit yatay çubuk grafik: etiket + değer çubukları. */
 export function BarList({ rows, format }: { rows: { label: string; value: number; tone?: Tone }[]; format: (v: number) => string }) {
+  if (isHidden()) return <Muted>Grafik gizli (hassas veri).</Muted>;
   const max = Math.max(1, ...rows.map((r) => Math.abs(r.value)));
   return (
     <View style={{ gap: 8 }}>
@@ -132,6 +134,7 @@ export function BarList({ rows, format }: { rows: { label: string; value: number
 
 /** 12 aylık dikey çubuk grafik. */
 export function MonthBars({ values, labels, format }: { values: number[]; labels: string[]; format: (v: number) => string }) {
+  if (isHidden()) return <Muted>Grafik gizli (hassas veri).</Muted>;
   const max = Math.max(1, ...values);
   return (
     <View style={{ flexDirection: 'row', alignItems: 'flex-end', height: 120, gap: 4 }}>

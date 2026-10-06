@@ -5,6 +5,11 @@ export const MONTHS_LONG = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Hazira
   'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 
 let symbol = '₺';
+let hidden = false;
+export const MASK = '••••';
+/** Hassas (parasal) verileri gizler: money() maskeli metin döndürür. */
+export function setHidden(v: boolean): void { hidden = v; }
+export const isHidden = () => hidden;
 export function setCurrency(code: string): void {
   symbol = CURRENCY_SYMBOLS[code] ?? '₺';
 }
@@ -21,6 +26,7 @@ export function num(x: number | null | undefined, decimals = 2): string {
 }
 
 export function money(x: number | null | undefined, sign = false): string {
+  if (hidden) return `${symbol}${MASK}`;
   const v = Number(x ?? 0);
   const prefix = v < 0 ? '-' : sign && v > 0 ? '+' : '';
   return `${prefix}${symbol}${num(Math.abs(v))}`;

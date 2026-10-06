@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { AppProvider } from '../src/state/app';
+import { PrivacyButton } from '../src/ui/PrivacyButton';
 import { colors } from '../src/ui/theme';
 
 export default function RootLayout() {
@@ -15,6 +16,7 @@ export default function RootLayout() {
           headerTitleStyle: { color: colors.text },
           contentStyle: { backgroundColor: colors.bg },
           headerBackTitle: 'Geri',
+          headerRight: () => <PrivacyButton />,
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

@@ -1,7 +1,7 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Text, View } from 'react-native';
-import { dmy, num } from '../domain/format';
+import { dmy, money, num } from '../domain/format';
 import { MaterialForm } from '../components/MaterialForm';
 import { MovementForm } from '../components/StockForms';
 import { imageUri } from '../services/images';
@@ -41,9 +41,9 @@ export default function StockDetailScreen() {
           <Muted>{item.size}{item.grade ? ` · ${item.grade}` : ''}{item.unit_weight > 0 ? ` · ${num(item.unit_weight)} kg/parça` : ''}{total}</Muted>
         ) : null}
         <InfoRow label="Minimum stok" value={`${num(item.min_qty)} ${item.unit}`} />
-        <InfoRow label="Birim maliyet" value={num(item.unit_cost)} />
-        {item.product_id ? <InfoRow label="Satış fiyatı" value={num(item.sale_price ?? 0)} /> : null}
-        <InfoRow label="Stok değeri" value={num(item.value)} />
+        <InfoRow label="Birim maliyet" value={money(item.unit_cost)} />
+        {item.product_id ? <InfoRow label="Satış fiyatı" value={money(item.sale_price ?? 0)} /> : null}
+        <InfoRow label="Stok değeri" value={money(item.value)} />
         <ButtonRow>
           <Button kind="primary" icon="swap-vertical" title="Stok Hareketi" onPress={() => setMove(true)} />
           {item.product_id ? (

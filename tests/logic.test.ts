@@ -3,7 +3,7 @@ import { openNodeDb } from '../server/sqliteAdapter';
 import { initDb } from '../src/db/migrate';
 import { createRepo } from '../src/repo';
 import { calcUnitWeight, hammaddeUnitCost, stockStatus, sizeLabel } from '../src/domain/weight';
-import { num, money, parseNum, trLower, trAscii, dmy, numInput } from '../src/domain/format';
+import { setHidden, num, money, parseNum, trLower, trAscii, dmy, numInput } from '../src/domain/format';
 import * as pl from '../src/domain/planning';
 import { statusForProgress } from '../src/repo/orders';
 import * as mp from '../src/domain/machinePlan';
@@ -485,6 +485,15 @@ test('makine planı: aşama, sök-tak, elle yerleştirme (Python ile aynı sonu�
   const forced: mp.OverrideMap = new Map([[mp.overrideKey(1, 1), { machineId: 2, day: null }]]);
   const p2 = mp.schedulePlan(orders, machines, new Date(2026, 9, 5), 5, 0, 0, forced);
   assert.equal(p2.orders[0].items.find((x) => x.op === 'Tornalama 1')!.machine, 'Torna 2');
+});
+
+test('gizleme: money() maskeler, şifre base64', async () => {
+  const shown = money(1234.5);
+  setHidden(true);
+  assert.equal(money(1234.5), '₺••••');
+  setHidden(false);
+  assert.equal(money(1234.5), shown);
+  assert.equal(atob('MTIzNA=='), '1234');
 });
 
 for (const [name, fn] of tests) {

@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { PrivacyButton } from '../../src/ui/PrivacyButton';
 import { colors } from '../../src/ui/theme';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 const tab = (title: string, icon: IconName, iconOn: IconName) => ({
   title,
-  tabBarIcon: ({ color, focused, size }: { color: any; focused: boolean; size: number }) => (
+  tabBarIcon: ({ color, focused, size }: { color: string; focused: boolean; size: number }) => (
     <Ionicons name={focused ? iconOn : icon} size={size} color={color} />
   ),
 });
@@ -19,6 +20,7 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: colors.muted,
         headerStyle: { backgroundColor: colors.card },
         headerTitleStyle: { color: colors.text },
+        headerRight: () => <PrivacyButton />,
         sceneStyle: { backgroundColor: colors.bg },
       }}
     >

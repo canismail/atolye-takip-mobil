@@ -61,11 +61,11 @@ const inputStyle = {
 } as const;
 
 export function TextField(props: { label: string; value: string; onChange: (v: string) => void; placeholder?: string;
-  hint?: string; multiline?: boolean; keyboardType?: 'default' | 'email-address' | 'phone-pad'; autoCapitalize?: 'none' | 'sentences' | 'words' }) {
+  hint?: string; multiline?: boolean; keyboardType?: 'default' | 'email-address' | 'phone-pad'; autoCapitalize?: 'none' | 'sentences' | 'words'; secure?: boolean }) {
   return (
     <Field label={props.label} hint={props.hint}>
-      <TextInput value={props.value} onChangeText={props.onChange} placeholder={props.placeholder} placeholderTextColor={colors.muted}
-        multiline={props.multiline} keyboardType={props.keyboardType} autoCapitalize={props.autoCapitalize ?? 'sentences'}
+      <TextInput value={props.value} secureTextEntry={props.secure} onChangeText={props.onChange} placeholder={props.placeholder} placeholderTextColor={colors.muted}
+        multiline={props.multiline} keyboardType={props.keyboardType} autoCapitalize={props.secure ? 'none' : props.autoCapitalize ?? 'sentences'}
         style={[inputStyle, props.multiline ? { minHeight: 80, textAlignVertical: 'top' } : null]} />
     </Field>
   );
